@@ -57,14 +57,21 @@ const ChatBot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || "";
+      // Robust API Key resolution
+      const apiKey = 
+        (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+        (import.meta as any).env?.GEMINI_API_KEY ||
+        (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : '') ||
+        (typeof process !== 'undefined' ? process.env?.VITE_GEMINI_API_KEY : '') ||
+        '';
       
-      if (!apiKey) {
-        throw new Error("API Key is missing. Please set GEMINI_API_KEY or VITE_GEMINI_API_KEY.");
+      if (!apiKey || apiKey === 'undefined') {
+        console.error("Critical: Gemini API Key is missing or undefined.");
+        throw new Error("MISSING_KEY");
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const model = "gemini-3-flash-preview";
+      const modelName = "gemini-3-flash-preview";
       
       const systemInstruction = `
         Eres el asistente virtual de Blackshack Surf School en Puerto Viejo, Costa Rica.
@@ -94,7 +101,7 @@ const ChatBot: React.FC = () => {
       }));
 
       const response = await ai.models.generateContent({
-        model: model,
+        model: modelName,
         contents: [
           ...chatHistory,
           { role: 'user', parts: [{ text: userMessage }] }
@@ -105,7 +112,11 @@ const ChatBot: React.FC = () => {
         }
       });
 
-      const aiText = response.text || (lang === 'es' ? "Lo siento, hubo un error. ¿Podemos intentar de nuevo?" : "Sorry, there was an error. Can we try again?");
+      if (!response || !response.text) {
+        throw new Error("EMPTY_RESPONSE");
+      }
+
+      const aiText = response.text;
       
       setMessages(prev => [...prev, { role: 'model', text: aiText }]);
       setInteractionCount(prev => prev + 1);
@@ -113,9 +124,24 @@ const ChatBot: React.FC = () => {
       if (interactionCount + 1 >= MAX_MESSAGES) {
         setIsFinished(true);
       }
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: lang === 'es' ? "Lo siento, Ronald está en el agua ahora mismo. ¿Podrías intentar más tarde?" : "Sorry, Ronald is in the water right now. Could you try again later?" }]);
+    } catch (error: any) {
+      console.error("ChatBot Error Details:", error);
+      
+      let errorMessage = lang === 'es' 
+        ? "Lo siento, Ronald está en el agua ahora mismo. ¿Podrías intentar más tarde?" 
+        : "Sorry, Ronald is in the water right now. Could you try again later?";
+
+      if (error.message === "MISSING_KEY") {
+        errorMessage = lang === 'es'
+          ? "Error de configuración: Falta la clave de API. Por favor, verifica las variables de entorno."
+          : "Configuration Error: API Key is missing. Please check environment variables.";
+      } else if (error.message?.includes("API_KEY_INVALID")) {
+        errorMessage = lang === 'es'
+          ? "La clave de API no es válida. Por favor, revísala en tu panel de control."
+          : "The API key is invalid. Please check it in your dashboard.";
+      }
+      
+      setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsLoading(false);
     }
