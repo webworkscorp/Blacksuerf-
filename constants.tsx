@@ -33,6 +33,7 @@ export const TRANSLATIONS = {
       { label: 'Sobre Ronald', href: '#about' },
       { label: 'Clases y Playas', href: '#services' },
       { label: 'Testimonios', href: '#trust' },
+      { label: 'Blog', href: '/blog.html' },
       { label: 'Reservar', href: '#booking' },
     ],
     hero: {
@@ -139,6 +140,7 @@ export const TRANSLATIONS = {
       { label: 'About Ronald', href: '#about' },
       { label: 'Classes & Spots', href: '#services' },
       { label: 'Testimonials', href: '#trust' },
+      { label: 'Blog', href: '/blog.html' },
       { label: 'Book now', href: '#booking' },
     ],
     hero: {
