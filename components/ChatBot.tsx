@@ -58,14 +58,15 @@ const ChatBot: React.FC = () => {
 
     try {
       // Robust API Key resolution
+      // We use direct access to help Vite's 'define' and 'import.meta.env' replacement
       const apiKey = 
-        (import.meta as any).env?.VITE_GEMINI_API_KEY || 
-        (import.meta as any).env?.GEMINI_API_KEY ||
-        (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : '') ||
-        (typeof process !== 'undefined' ? process.env?.VITE_GEMINI_API_KEY : '') ||
+        import.meta.env.VITE_GEMINI_API_KEY || 
+        import.meta.env.GEMINI_API_KEY || 
+        (typeof process !== 'undefined' && process.env ? process.env.VITE_GEMINI_API_KEY : '') ||
+        (typeof process !== 'undefined' && process.env ? process.env.GEMINI_API_KEY : '') ||
         '';
       
-      if (!apiKey || apiKey === 'undefined') {
+      if (!apiKey || apiKey === 'undefined' || apiKey === 'null') {
         console.error("Critical: Gemini API Key is missing or undefined.");
         throw new Error("MISSING_KEY");
       }
