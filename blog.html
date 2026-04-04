@@ -98,7 +98,12 @@
                     var s = document.createElement('script'),
                         u = 'https://app.trysoro.com/api/embed/94c979b2-bcde-4791-9900-28c19e26e3a7';
                     
-                    if(p.get('post')) u += '?post=' + encodeURIComponent(p.get('post'));
+                    if(p.get('post')) {
+                        u += '?post=' + encodeURIComponent(p.get('post'));
+                    }
+                    
+                    // Añadimos un parámetro para evitar que el navegador o Soro usen caché antigua
+                    u += (u.indexOf('?') > -1 ? '&' : '?') + 't=' + new Date().getTime();
                     
                     s.src = u;
                     
